@@ -1,0 +1,57 @@
+
+import { startView,hideStartView} from './app.js'
+
+let navigation;
+let section;
+
+export function setupRegister(navBar,sectionTarget,registerNav) {
+    navigation=navBar;
+    section=sectionTarget;
+    registerNav.querySelector('a').addEventListener('click',showRegisterPage);
+}
+
+ function showRegisterPage (e) {
+    hideStartView();
+    navigation.style.display='block';
+    section.style.display='block';
+    document.querySelector('form').addEventListener('submit',createUser)
+
+}
+
+async function createUser(e) {
+    e.preventDefault();
+    const form=document.querySelector('form');
+    let formData=new FormData(form);
+    const email=formData.get('email');
+    const password=formData.get('password');
+    const repeatPassword=formData.get('repeatPassword');
+    console.log(email,password,repeatPassword);
+    if (email==='') {
+        return alert('Email cant be empty!')
+    }
+    if (password.length<6) {
+        return alert('Password must be at least 6 characters!')
+    }
+    if (password!==repeatPassword) {
+        return alert('Passwords doesnt match!')
+    }
+    const responce=await fetch('http://localhost:3030/users/register',{
+        method:'post',
+        headers:{
+            'Content-Type':'application/json',
+        },
+        body:JSON.stringify({email,password})
+    })
+    if (responce.ok===false) {
+        const error=await responce.json();
+        return alert(error.message);
+    }
+
+    const data=await responce.json();
+
+    sessionStorage.setItem('userToken',data.accessToken);
+    sessionStorage.setItem('email',email);
+    sessionStorage.setItem('password',password);
+
+    startView();
+}
